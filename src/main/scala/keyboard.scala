@@ -1,6 +1,5 @@
 import chisel3._
 import _root_.circt.stage.ChiselStage
-//import chisel3.util._
 import chisel3.experimental._ // To enable experimental features
 import chisel3.util.HasBlackBoxResource
 
@@ -25,7 +24,7 @@ class PS2Receiver extends BlackBox with HasBlackBoxResource {
   addResource("/debouncer.v")
 }
 
-class Uart_tx extends BlackBox with HasBlackBoxResource {
+class uart_tx extends BlackBox with HasBlackBoxResource {
   val io = IO(new Bundle {
     val clk = Input(Clock())
     val tbus = Input(UInt(8.W))
@@ -36,7 +35,7 @@ class Uart_tx extends BlackBox with HasBlackBoxResource {
   addResource("/uart_tx.v")
 }
 
-class Uart_buf_con extends BlackBox with HasBlackBoxResource {
+class uart_buf_con extends BlackBox with HasBlackBoxResource {
   val io = IO(new Bundle {
     val clk = Input(Clock())
     val bcount = Input(UInt(3.W))
@@ -96,7 +95,7 @@ class Top extends Module {
   keycode := uut.io.keycode
   flag := uut.io.oflag
 
-  val keycode_b = RegInit(0.U(8.W))
+  val keycode_b = RegInit(0.U(16.W))
 
   when (keycode_b =/= keycode) {
     keycode_b := keycode
@@ -119,11 +118,11 @@ class Top extends Module {
     start := false.B;
   }
 
-  val conv = Module(new Bin2ASCII(2))
+  val conv = Module(new bin2ascii(2))
   conv.io.I := keycodev
   tbuf := conv.io.O
 
-  val uart_buf_con = Module(new Uart_buf_con)
+  val uart_buf_con = Module(new uart_buf_con)
   uart_buf_con.io.clk := clock
   uart_buf_con.io.bcount := bcount
   uart_buf_con.io.tbuf := tbuf
@@ -133,7 +132,7 @@ class Top extends Module {
   uart_buf_con.io.tready := tready
   tbus := uart_buf_con.io.tbus
 
-  val uart_tx = Module(new Uart_tx)
+  val uart_tx = Module(new uart_tx)
   uart_tx.io.clk := clock
   uart_tx.io.start := tstart
   uart_tx.io.tbus := tbus
@@ -141,7 +140,7 @@ class Top extends Module {
   tready := uart_tx.io.ready
 }
 
-class Bin2ASCII(nbytes: Int) extends Module {
+class bin2ascii(nbytes: Int) extends Module {
   val io = IO(new Bundle {
     val I = Input(UInt((nbytes*8).W))
     val O = Output(UInt((nbytes*16).W))
