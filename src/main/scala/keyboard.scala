@@ -5,7 +5,7 @@ import chisel3.util.HasBlackBoxResource
 
 class IBUFDS extends BlackBox(Map("DIFF_TERM" -> "FALSE",
   "IBUF_LOW_PWR" -> "TRUE",
-  "IOSTANDARD" -> "DEFAULT")) {
+  "IOSTANDARD" -> "LVDS")) {
   val io = IO(new Bundle {
     val O = Output(Clock())
     val I = Input(Clock())
@@ -108,7 +108,7 @@ class Top extends Module {
       bcount := 5.U(3.W)
     } .otherwise {
       cn := keycode(7,0) =/= keycodev || keycodev(15,8) === "hf0".U(8.W)
-      bcount := 3.U(2.W)
+      bcount := 2.U(3.W)
     }
   }
 
