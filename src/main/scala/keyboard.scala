@@ -108,7 +108,7 @@ class Top extends Module {
       bcount := 5.U(3.W)
     } .otherwise {
       cn := keycode(7,0) =/= keycodev || keycodev(15,8) === "hf0".U(8.W)
-      bcount := 3.U(3.W)
+      bcount := 3.U(2.W)
     }
   }
 
@@ -165,6 +165,7 @@ class bin2ascii(nbytes: Int) extends Module {
 object Main extends App {
   println(
     ChiselStage.emitSystemVerilog(
+//    ChiselStage.emitVerilog(
       gen = new TopWrapper,
       firtoolOpts = Array("-disable-all-randomization", "-strip-debug-info")
     )
