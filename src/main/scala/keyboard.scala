@@ -4,6 +4,7 @@ import chisel3.experimental._ // To enable experimental features
 import chisel3.util.HasBlackBoxResource
 
 class IBUFDS extends BlackBox(Map("DIFF_TERM" -> "FALSE",
+  "IBUF_LOW_PWR" -> "TRUE",
   "IOSTANDARD" -> "DEFAULT")) {
   val io = IO(new Bundle {
     val O = Output(Clock())
@@ -63,7 +64,7 @@ class TopWrapper extends RawModule {
   ibufds.io.IB := clk_n
   clk := ibufds.io.O
 
-  val top = withClockAndReset(clk, reset) {Module( new Top) }
+  val top = withClockAndReset(clk, ~reset) {Module( new Top) }
   top.io.PS2Clk := PS2Clk;
   top.io.PS2Data := PS2Data;
   tx := top.io.tx
@@ -145,17 +146,18 @@ class bin2ascii(nbytes: Int) extends Module {
     val I = Input(UInt((nbytes*8).W))
     val O = Output(UInt((nbytes*16).W))
   })
+  //val initRegOfVec = RegInit(VecInit(Seq.fill(4)(0.U(32.W))))
+  val O_r = RegInit(VecInit(Seq.fill(4)(0.U(8.W))))
 
-  val O_r = RegInit(0.U((nbytes*16).W))
-  val I_w =  Wire(UInt(8.W))
+  val I_w =  Wire(UInt(4.W))
 
-  for (i <- 0 to nbytes-1) {
-    I_w := io.I(4*i+4,4*i)
-     when( I_w >= 0.U && I_w <= 9.U) {
-       O_r(i) <= 48.U(8.W) + io.I(i)
-     } .otherwise {
-       O_r(i) <= 55.U(8.W) + io.I(i)
-   }
+  for (i <- 0 to nbytes*2-1) {
+    I_w := io.I(4*i+3,4*i)
+    when( I_w >= 0.U(4.W) && I_w <= 9.U(4.W)) {
+      O_r(i) := 48.U(8.W) + I_w
+    } .otherwise {
+      O_r(i) := 55.U(8.W) + I_w
+    }
   }
   io.O := O_r.asUInt
 }

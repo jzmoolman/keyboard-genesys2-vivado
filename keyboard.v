@@ -8,6 +8,36 @@
 
 // external module PS2Receiver
 
+module bin2ascii(
+  input         clock,
+                reset,
+  input  [15:0] io_I,
+  output [31:0] io_O
+);
+
+  reg [7:0] O_r_0;
+  reg [7:0] O_r_1;
+  reg [7:0] O_r_2;
+  reg [7:0] O_r_3;
+  always @(posedge clock) begin
+    if (reset) begin
+      O_r_0 <= 8'h0;
+      O_r_1 <= 8'h0;
+      O_r_2 <= 8'h0;
+      O_r_3 <= 8'h0;
+    end
+    else begin
+      automatic logic       _GEN = io_I[15:12] < 4'hA;
+      automatic logic [7:0] _GEN_0 = {4'h0, io_I[15:12]};
+      O_r_0 <= _GEN ? _GEN_0 + 8'h30 : _GEN_0 + 8'h37;
+      O_r_1 <= _GEN ? _GEN_0 + 8'h30 : _GEN_0 + 8'h37;
+      O_r_2 <= _GEN ? _GEN_0 + 8'h30 : _GEN_0 + 8'h37;
+      O_r_3 <= _GEN ? _GEN_0 + 8'h30 : _GEN_0 + 8'h37;
+    end
+  end // always @(posedge)
+  assign io_O = {O_r_3, O_r_2, O_r_1, O_r_0};
+endmodule
+
 // external module uart_buf_con
 
 // external module uart_tx
@@ -23,6 +53,7 @@ module Top(
   wire        _uart_tx_ready;
   wire        _uart_buf_con_tstart;
   wire [7:0]  _uart_buf_con_tbus;
+  wire [31:0] _conv_io_O;
   wire [15:0] _uut_keycode;
   wire        _uut_oflag;
   reg         start;
@@ -63,10 +94,16 @@ module Top(
     .keycode (_uut_keycode),
     .oflag   (_uut_oflag)
   );
+  bin2ascii conv (
+    .clock (clock),
+    .reset (reset),
+    .io_I  (keycodev),
+    .io_O  (_conv_io_O)
+  );
   uart_buf_con uart_buf_con (
     .clk    (clock),
     .bcount (bcount),
-    .tbuf   (32'h0),
+    .tbuf   (_conv_io_O),
     .start  (start),
     .ready  (/* unused */),
     .tstart (_uart_buf_con_tstart),
@@ -94,6 +131,7 @@ module TopWrapper(
   wire _ibufds_O;
   IBUFDS #(
     .DIFF_TERM("FALSE"),
+    .IBUF_LOW_PWR("TRUE"),
     .IOSTANDARD("DEFAULT")
   ) ibufds (
     .O  (_ibufds_O),
@@ -102,7 +140,7 @@ module TopWrapper(
   );
   Top top (
     .clock      (_ibufds_O),
-    .reset      (reset),
+    .reset      (~reset),
     .io_PS2Clk  (PS2Clk),
     .io_PS2Data (PS2Data),
     .io_tx      (tx)
@@ -338,4 +376,4 @@ debouncer.v
 uart_buf_con.v
 uart_tx.v
 
-[success] Total time: 1 s, completed Dec 10, 2024, 1:36:47 PM
+[success] Total time: 1 s, completed Dec 10, 2024, 2:48:46 PM
